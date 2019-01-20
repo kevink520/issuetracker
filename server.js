@@ -1,10 +1,12 @@
 'use strict';
 
+require('dotenv').config();
 var express     = require('express');
 var helmet      = require('helmet');
 var bodyParser  = require('body-parser');
 var expect      = require('chai').expect;
 var cors        = require('cors');
+var mongoose    = require('mongoose');
 
 var apiRoutes         = require('./routes/api.js');
 var fccTestingRoutes  = require('./routes/fcctesting.js');
@@ -22,6 +24,16 @@ app.use(cors({origin: '*'})); //For FCC testing purposes only
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+mongoose.connect(process.env.DATABASE, {useNewUrlParser: true});
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.on('open', function() {
+  app.route('/api/issues/:project')
+    .get(function(req, res) {
+      res.json({project: req.params.project});
+    });
+});
 
 //Sample front-end
 app.route('/:project/')
@@ -50,7 +62,7 @@ app.use(function(req, res, next) {
 
 //Start our server and tests!
 app.listen(process.env.PORT || 3000, function () {
-  console.log("Listening on port " + process.env.PORT);
+  console.log("Listening on port " + (process.env.PORT || 3000));
   if(process.env.NODE_ENV==='test') {
     console.log('Running Tests...');
     setTimeout(function () {
