@@ -25,15 +25,12 @@ app.use(cors({origin: '*'})); //For FCC testing purposes only
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-mongoose.connect(process.env.DATABASE, {useNewUrlParser: true});
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.on('open', function() {
-  app.route('/api/issues/:project')
-    .get(function(req, res) {
-      res.json({project: req.params.project});
-    });
-});
+mongoose.connect(process.env.DATABASE);
+
+app.route('/api/issues/:project')
+  .get(function(req, res) {
+    res.json({project: req.params.project});
+  });
 
 //Sample front-end
 app.route('/:project/')
