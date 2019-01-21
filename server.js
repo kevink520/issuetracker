@@ -25,9 +25,49 @@ app.use(cors({origin: '*'})); //For FCC testing purposes only
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-mongoose.connect(process.env.DATABASE);
+mongoose.connect(process.env.DATABASE, { useNewUrlParser: true });
+var Schema = mongoose.Schema;
+var issueSchema = new Schema({
+  project: String,
+  title: String,
+  text: String,
+  createdBy: String,
+  statusText: String,
+  createdOn: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedOn: Date,
+  open: Boolean,
+});
 
+var Issue = mongoose.model('Issue', issueSchema);
 app.route('/api/issues/:project')
+  .post(function(req, res) {
+    if (!req.body) {
+      return res.sendStatus(400);
+    }
+
+    var now = Date.now();
+    var issue = new Issue({
+      project: req.params.project,
+      title: req.body.issue_title,
+      text: req.body.issue_text,
+      createdBy: req.body.created_by,
+      statusText: req.body.status_text,
+      createdOn: now,
+      updatedOn: now,
+      open: false,
+    });
+
+    issue.save(function(err, issue) {
+      if (err) {
+        res.status(500).send(err);
+      }
+
+      res.send(issue);
+    });
+  })
   .get(function(req, res) {
     res.json({project: req.params.project});
   });
