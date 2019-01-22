@@ -57,7 +57,7 @@ app.route('/api/issues/:project')
       statusText: req.body.status_text,
       createdOn: now,
       updatedOn: now,
-      open: false,
+      open: true,
     });
 
     issue.save(function(err, issue) {
@@ -65,11 +65,95 @@ app.route('/api/issues/:project')
         res.status(500).send(err);
       }
 
-      res.send(issue);
+      res.json(issue);
+    });
+  })
+  .put(function(req, res) {
+    if (!req.body) {
+      return res.sendStatus(400);
+    }
+
+    if (!req.body._id) {
+      return res.sendStatus(400);
+    }
+
+    var update = {};
+    if (req.body.issue_title) {
+      update.title = req.body.issue_title;
+    }
+
+    if (req.body.issue_text) {
+      update.text = req.body.issue_text;
+    }
+
+    if (req.body.created_by) {
+      update.createdBy = req.body.created_by;
+    }
+
+    if (req.body.status_text) {
+      update.statusText = req.body.status_text;
+    }
+
+    if (req.body.open) {
+      update.open = req.body.open;
+    }
+
+    if (Object.keys(update).length > 0) {
+      update.updatedOn = Date.now();
+    }
+
+    Issue.findByIdAndUpdate(req.body._id, update, {new: true}, function(err, issue) {
+      if (err) {
+        return res.status(500).send(err);
+      }
+
+      res.json(issue);
     });
   })
   .get(function(req, res) {
-    res.json({project: req.params.project});
+    var conditions = {
+      project: req.params.project,
+    };
+
+    if (req.query._id) {
+      conditions._id = req.query._id;
+    }
+
+    if (req.query.issue_title) {
+      conditions.title = req.query.issue_title;
+    }
+
+    if (req.query.issue_text) {
+      conditions.text = req.query.issue_text;
+    }
+
+    if (req.query.created_by) {
+      conditions.createdBy = req.query.created_by;
+    }
+
+    if (req.query.status_text) {
+      conditions.statusText = req.query.status_text;
+    }
+
+    if (req.query.created_on) {
+      conditions.createdOn = req.query.created_on;
+    }
+
+    if (req.query.updated_on) {
+      conditions.updatedOn = req.query.updated_on;
+    }
+
+    if (req.query.open) {
+      conditions.open = req.query.open;
+    }
+
+    Issue.find(conditions, function(err, issues) {
+      if (err) {
+        return res.status(500).send(err);
+      }
+
+      res.json(issues);
+    });
   });
 
 //Sample front-end
