@@ -29,18 +29,20 @@ mongoose.connect(process.env.DATABASE, { useNewUrlParser: true });
 var Schema = mongoose.Schema;
 var issueSchema = new Schema({
   project: String,
-  title: String,
-  text: String,
-  createdBy: String,
-  statusText: String,
-  createdOn: {
+  issue_title: String,
+  issue_text: String,
+  created_by: String,
+  assigned_to: String,
+  status_text: String,
+  created_on: {
     type: Date,
     default: Date.now,
   },
-  updatedOn: Date,
+  updated_on: Date,
   open: Boolean,
 });
 
+var schemaKeys = Object.keys(issueSchema.paths);
 var Issue = mongoose.model('Issue', issueSchema);
 app.route('/api/issues/:project')
   .post(function(req, res) {
@@ -51,63 +53,68 @@ app.route('/api/issues/:project')
     var now = Date.now();
     var issue = new Issue({
       project: req.params.project,
-      title: req.body.issue_title,
-      text: req.body.issue_text,
-      createdBy: req.body.created_by,
-      statusText: req.body.status_text,
-      createdOn: now,
-      updatedOn: now,
+      issue_title: req.body.issue_title,
+      issue_text: req.body.issue_text,
+      created_by: req.body.created_by,
+      assigned_to: req.body.assigned_to,
+      status_text: req.body.status_text,
+      created_on: now,
+      updated_on: now,
       open: true,
     });
 
     issue.save(function(err, issue) {
       if (err) {
-        res.status(500).send(err);
+        res.send('could not save issue');
       }
 
       res.json(issue);
     });
   })
   .put(function(req, res) {
+    var update = {};
+    if (!req.body) {
+      return res.sendStatus(400);
+    }
+
+    for (var key in req.body) {
+      if (schemaKeys.indexOf(key) > -1 && req.body[key]) {
+        update[key] = req.body[key];
+      }
+    }
+
+    if (Object.keys(update).length === 0) {
+      return res.send('no updated field sent');
+    }
+
+    if (!req.body._id) {
+      return res.send('_id error');
+    }
+
+    update.update_on = Date.now();
+    Issue.findByIdAndUpdate(req.body._id, update, function(err, issue) {
+      if (err) {
+        return res.send('could not update ' + req.body._id);
+      }
+
+      res.send('successfully updated');
+    });
+  })
+  .delete(function(req, res) {
     if (!req.body) {
       return res.sendStatus(400);
     }
 
     if (!req.body._id) {
-      return res.sendStatus(400);
+      return res.send('_id error');
     }
 
-    var update = {};
-    if (req.body.issue_title) {
-      update.title = req.body.issue_title;
-    }
-
-    if (req.body.issue_text) {
-      update.text = req.body.issue_text;
-    }
-
-    if (req.body.created_by) {
-      update.createdBy = req.body.created_by;
-    }
-
-    if (req.body.status_text) {
-      update.statusText = req.body.status_text;
-    }
-
-    if (req.body.open) {
-      update.open = req.body.open;
-    }
-
-    if (Object.keys(update).length > 0) {
-      update.updatedOn = Date.now();
-    }
-
-    Issue.findByIdAndUpdate(req.body._id, update, {new: true}, function(err, issue) {
+    Issue.findByIdAndDelete(req.body._id, function(err, issue) {
       if (err) {
-        return res.status(500).send(err);
+        return res.send('could not delete ' + req.body._id);
       }
 
-      res.json(issue);
+      res.send('deleted ' + req.body._id);
     });
   })
   .get(function(req, res) {
@@ -115,41 +122,15 @@ app.route('/api/issues/:project')
       project: req.params.project,
     };
 
-    if (req.query._id) {
-      conditions._id = req.query._id;
-    }
-
-    if (req.query.issue_title) {
-      conditions.title = req.query.issue_title;
-    }
-
-    if (req.query.issue_text) {
-      conditions.text = req.query.issue_text;
-    }
-
-    if (req.query.created_by) {
-      conditions.createdBy = req.query.created_by;
-    }
-
-    if (req.query.status_text) {
-      conditions.statusText = req.query.status_text;
-    }
-
-    if (req.query.created_on) {
-      conditions.createdOn = req.query.created_on;
-    }
-
-    if (req.query.updated_on) {
-      conditions.updatedOn = req.query.updated_on;
-    }
-
-    if (req.query.open) {
-      conditions.open = req.query.open;
+    for (var key in req.query) {
+      if (schemaKeys.indexOf(key) > -1) {
+        conditions[key] = req.query[key];
+      }
     }
 
     Issue.find(conditions, function(err, issues) {
       if (err) {
-        return res.status(500).send(err);
+        return res.send('error retrieving issues');
       }
 
       res.json(issues);
