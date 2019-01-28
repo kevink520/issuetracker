@@ -48,6 +48,9 @@
         </div>
         <code id="jsonResult"></code>
       </div>
+      <div class="button-wrapper">
+        <a class="apitest-link" href="/apitest/">Go to /apitest/</a>
+      </div>
     </div>
     <div class="user-stories" id="userstories">
       <div class="user-stories-inner">
@@ -69,7 +72,7 @@
         <h3>Example return:</h3>
         <code>[{"_id":"5871dda29faedc3491ff93bb","issue_title":"Fix error in posting data","issue_text":"When we post data it has an error.","created_on":"2017-01-08T06:35:14.240Z","updated_on":"2017-01-08T06:35:14.240Z","created_by":"Joe","assigned_to":"Joe","open":true,"status_text":"In QA"},...]</code>
         <br><br>
-        <h2><a href='/apitest/'>EXAMPLE: Go to <i>/apitest/</i> project issues</a></h2>
+        <h2><a class="apitest-link" href='/apitest/'>EXAMPLE: Go to <i>/apitest/</i> project issues</a></h2>
       </div>
     </div>
     <!-- Your web-app is https, so your scripts need to be too -->
@@ -90,9 +93,10 @@
           $('.user-stories').animate({ width: 'toggle' }, 400);
         });
 
-        $('.tab').on('click', function() {
+        $('.tab').on('click', function(e) {
+          e.preventDefault();
           $('.is-active').removeClass('is-active');
-          $(this).addClass('is-active');
+          $(this).add($($(this).attr('href'))).addClass('is-active');
         });
 
         $('#testForm').submit(function(e) {
