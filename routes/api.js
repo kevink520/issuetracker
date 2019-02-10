@@ -91,8 +91,8 @@ module.exports = function (app) {
 
       issue.save(function(err, issue) {
         if (err) {
-          res.type('text/plain');
-          res.send('could not save issue');
+          res.type('text')
+            .send('could not save issue');
         }
 
         res.json(issue);
@@ -111,22 +111,25 @@ module.exports = function (app) {
         }
       }
 
-      res.set('Content-Type', 'text/plain');
       if (Object.keys(update).length === 0) {
-        return res.send('no updated field sent');
+        return res.type('text')
+          .send('no updated field sent');
       }
 
       if (!req.body._id) {
-        return res.send('_id error');
+        return res.type('text')
+          .send('_id error');
       }
 
       update.updated_on = Date.now();
       Issue.findByIdAndUpdate(req.body._id, update, function(err, issue) {
         if (err) {
-          return res.send('could not update ' + req.body._id);
+          return res.type('text')
+            .send('could not update ' + req.body._id);
         }
 
-        res.send('successfully updated');
+        res.type('text')
+          .send('successfully updated');
       })
     })
 
@@ -135,17 +138,19 @@ module.exports = function (app) {
         return res.sendStatus(400);
       }
 
-      res.type('text/plain');
       if (!req.body._id) {
-        return res.send('_id error');
+        return res.type('text')
+          .send('_id error');
       }
 
       Issue.findByIdAndDelete(req.body._id, function(err, issue) {
         if (err) {
-          return res.send('could not delete ' + req.body._id);
+          return res.type('text')
+            .send('could not delete ' + req.body._id);
         }
 
-        res.send('deleted ' + req.body._id);
+        res.type('text')
+          .send('deleted ' + req.body._id);
       });
     });  
 };
